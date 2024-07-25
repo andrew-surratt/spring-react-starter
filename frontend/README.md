@@ -24,3 +24,7 @@ This template provides a starter for React projects.
 ## Lint
 
 `npm run lint`
+
+## Prettier
+
+`npm run prettier`
