@@ -4,7 +4,10 @@ import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 import { Box, createTheme, ThemeProvider } from '@mui/material';
 import { NavMenu } from './components/Menu.tsx';
-import { Documents } from './components/Documents.tsx';
+import { createBrowserRouter, Outlet, RouterProvider } from 'react-router-dom';
+import { Home } from './routes/Home.tsx';
+import { ErrorBoundary } from './components/ErrorBoundary.tsx';
+import { Chat } from './routes/Chat.tsx';
 
 const theme = createTheme({
   palette: {
@@ -14,13 +17,43 @@ const theme = createTheme({
   },
 });
 
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: (
+      <Box>
+        <NavMenu />
+        <Outlet />
+      </Box>
+    ),
+    errorElement: <ErrorBoundary />,
+    children: [
+      {
+        path: '/',
+        element: <Home />,
+      },
+      {
+        path: '/chat',
+        element: <Chat />,
+      },
+    ],
+  },
+  {
+    path: '*',
+    element: (
+      <Box>
+        <NavMenu />
+        <ErrorBoundary />
+      </Box>
+    ),
+    errorElement: <ErrorBoundary />,
+  },
+]);
+
 function App() {
   return (
     <ThemeProvider theme={theme}>
-      <Box>
-        <NavMenu />
-        <Documents />
-      </Box>
+      <RouterProvider router={router} />
     </ThemeProvider>
   );
 }
