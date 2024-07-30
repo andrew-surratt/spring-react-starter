@@ -2,7 +2,7 @@ import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
-import { Box, createTheme, ThemeProvider } from '@mui/material';
+import { Box, Container, createTheme, ThemeProvider } from '@mui/material';
 import { NavMenu } from './components/Menu.tsx';
 import { createBrowserRouter, Outlet, RouterProvider } from 'react-router-dom';
 import { Home } from './routes/Home.tsx';
@@ -21,7 +21,7 @@ const router = createBrowserRouter([
   {
     path: '/',
     element: (
-      <Box>
+      <Box height="100%">
         <NavMenu />
         <Outlet />
       </Box>
@@ -41,7 +41,7 @@ const router = createBrowserRouter([
   {
     path: '*',
     element: (
-      <Box>
+      <Box height="100%">
         <NavMenu />
         <ErrorBoundary />
       </Box>
