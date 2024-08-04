@@ -1,5 +1,4 @@
 import {
-  Button,
   Container,
   Grid,
   IconButton,
@@ -9,6 +8,8 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import SendIcon from '@mui/icons-material/Send';
+import { useEffect, useState } from 'react';
+import { useAuth } from '../hooks/useAuth.ts';
 
 type MessageParams = {
   direction: 'in' | 'out';
@@ -90,7 +91,66 @@ function MessageInput() {
   );
 }
 
+type Message = {
+  user: string;
+  message: string;
+};
+
 export function Chat() {
+  const serverWebSocketUrl = import.meta.env
+    .VITE_SERVER_WEBSOCKET_URL as string;
+  const { getAccessTokenSilently } = useAuth();
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [ws, setWs] = useState<WebSocket | null>(null);
+  const [message, setMessage] = useState<Message | null>(null);
+  const [clientId, setClientId] = useState('');
+
+  useEffect(() => {
+    const effect = async () => {
+      const token = await getAccessTokenSilently();
+
+      const websocket: WebSocket = new WebSocket(`ws://localhost:3000/chat`);
+
+      websocket.onopen = () => {
+        console.log('WebSocket is connected');
+        // Generate a unique client ID
+        const id = Math.floor(Math.random() * 1000);
+        setClientId(String(id));
+      };
+
+      websocket.onmessage = (evt) => {
+        const message = evt as Message;
+        setMessages((prevMessages: Message[]) => [...prevMessages, message]);
+      };
+
+      websocket.onclose = (event) => {
+        console.log('WebSocket is closed', event);
+      };
+
+      setWs(websocket);
+    };
+    effect().catch((e: unknown) => {
+      console.error(e);
+    });
+
+    return () => {
+      ws?.close();
+    };
+  }, [serverWebSocketUrl]);
+
+  const sendMessage = () => {
+    if (ws) {
+      ws.send(
+        JSON.stringify({
+          type: 'message',
+          payload: message,
+          clientId: clientId,
+        }),
+      );
+      setMessage('');
+    }
+  };
+
   return (
     <>
       <Container maxWidth={'lg'} sx={{ height: '90vh' }}>

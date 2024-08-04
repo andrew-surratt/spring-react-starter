@@ -7,7 +7,10 @@ This template provides a starter for React projects.
 - React
 - Vite
 - Typescript
+- Auth0 Authentication
+- Prettier
 - ESLint
+- Automated formatting using Husky hooks
 
 ## Install
 
