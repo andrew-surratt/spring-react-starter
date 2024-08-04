@@ -17,10 +17,14 @@ public class Document {
 
     String name;
 
+    String content;
+
     public Document(
-            String name
+            String name,
+            String content
     ) {
         this.name = name;
+        this.content = content;
     }
 
     public Document() {

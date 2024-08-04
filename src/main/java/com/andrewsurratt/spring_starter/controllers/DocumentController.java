@@ -7,6 +7,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,6 +27,13 @@ public class DocumentController {
     )
     public ResponseEntity<Document> createDocument(@RequestBody Document document) {
         return ResponseEntity.ok(documentRepository.save(document));
+    }
+
+    @GetMapping(
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<Document> getDocument(
+    ) {
+        return documentRepository.findFirst10ByOrderByIdDesc();
     }
 
     @GetMapping(

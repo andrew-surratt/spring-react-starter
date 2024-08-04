@@ -4,10 +4,21 @@ spring:
     group:
       development: development
       test: test
-  security:
-    oauth2:
-      client:
-        registration:
-          github:
-            clientId: github-client-id
-            clientSecret: github-client-secret
+  data:
+    redis:
+      host: localhost
+      port: 6379
+server:
+  port: 3000
+logging:
+  level:
+    root: INFO
+    org.springframework.web: INFO
+okta:
+  oauth2:
+    issuer: https://auth0.com/
+    audience: https://auth0.com/api/v2/
+    client-id: id
+application:
+  client-origin-url: http://localhost:3002
+  cors-max-age: 86400
