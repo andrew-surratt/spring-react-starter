@@ -7,7 +7,6 @@ import org.springframework.core.env.Environment;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
@@ -24,16 +23,23 @@ public class WebSecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http, Environment environment) throws Exception {
         if (Arrays.asList(environment.getActiveProfiles()).contains("development")) {
-            // Disable CORS and CSRF for development
-            http.csrf(CsrfConfigurer::disable)
-                    .cors(Customizer.withDefaults());
+            // Allow actuator access for development
+            http.authorizeHttpRequests(a -> a
+                    .requestMatchers("/", "/user", "/error", "/webjars/**", "/chat", "/actuator/**")
+                    .permitAll()
+                    .anyRequest().authenticated()
+            );
+        } else {
+            http.authorizeHttpRequests(a -> a
+                    .requestMatchers("/", "/user", "/error", "/webjars/**", "/chat")
+                    .permitAll()
+                    .anyRequest().authenticated()
+            );
         }
 
         return http
-                .authorizeHttpRequests(a -> a
-                        .requestMatchers("/","/user", "/error", "/webjars/**").permitAll()
-                        .anyRequest().authenticated()
-                )
+                .csrf(Customizer.withDefaults())
+                .cors(Customizer.withDefaults())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(makePermissionsConverter()))
                         .authenticationEntryPoint(authenticationErrorHandler))

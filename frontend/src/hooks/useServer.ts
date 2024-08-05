@@ -8,6 +8,13 @@ export type ServerDocument = {
   content: string;
 };
 
+export type ServerMessage = {
+  id: string;
+  username: string;
+  message: string;
+  createdDate: string;
+};
+
 export type ServerDocumentRequest = Omit<ServerDocument, 'id'>;
 
 export const useServer = () => {
@@ -41,10 +48,18 @@ export const useServer = () => {
     [serverUrl, getAccessTokenSilently],
   );
 
+  const getMessages = useCallback(async (): Promise<ServerMessage[]> => {
+    const url = `${serverUrl}/messages`;
+    const token = await getAccessTokenSilently();
+
+    return get(url, token);
+  }, [serverUrl, getAccessTokenSilently]);
+
   return {
     getUserProfile,
     getDocuments,
     createDocument,
     deleteDocument,
+    getMessages,
   };
 };

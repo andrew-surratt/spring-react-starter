@@ -26,9 +26,10 @@ export const useAuth = () => {
   );
 
   const getUserProfile = useCallback(
-    async (userSub: string): Promise<Auth0UserProfile | null> => {
-      if (userSub) {
-        const userDetailsByIdUrl = `https://${domain}/api/v2/users/${userSub}`;
+    async (userSub?: string): Promise<Auth0UserProfile | null> => {
+      const sub = userSub ?? user?.sub;
+      if (sub) {
+        const userDetailsByIdUrl = `https://${domain}/api/v2/users/${sub}`;
         const token = await getAccessToken();
 
         try {
@@ -41,7 +42,7 @@ export const useAuth = () => {
       }
       return null;
     },
-    [domain, serverBaseUrl, getAccessToken],
+    [domain, user, user?.sub, serverBaseUrl, getAccessToken],
   );
 
   return {
