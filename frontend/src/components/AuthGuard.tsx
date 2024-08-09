@@ -1,5 +1,5 @@
 import { withAuthenticationRequired } from '@auth0/auth0-react';
-import { CircularProgress } from '@mui/material';
+import { CircularProgress, Grid } from '@mui/material';
 import { ComponentType } from 'react';
 
 interface AuthenticationGuardProps {
@@ -11,9 +11,14 @@ export const AuthenticationGuard = ({
 }: AuthenticationGuardProps) => {
   const Component = withAuthenticationRequired(component, {
     onRedirecting: () => (
-      <div className="page-layout">
+      <Grid
+        container
+        alignItems="center"
+        justifyContent="center"
+        height={'100%'}
+      >
         <CircularProgress />
-      </div>
+      </Grid>
     ),
   });
 

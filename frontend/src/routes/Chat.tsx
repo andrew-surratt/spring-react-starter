@@ -1,5 +1,5 @@
-import { Container, Grid } from '@mui/material';
-import { useCallback, useEffect, useState } from 'react';
+import { Box, Container, Grid } from '@mui/material';
+import { createRef, useCallback, useEffect, useState } from 'react';
 import { Client, IMessage, StompSubscription } from '@stomp/stompjs';
 import { MessageInput } from '../components/chats/MessageInput.tsx';
 import { Message } from '../components/chats/Message.tsx';
@@ -15,6 +15,7 @@ export function Chat() {
     useState<StompSubscription | null>(null);
   const [messages, setMessages] = useState<ServerMessage[]>([]);
   const [username, setUsername] = useState('');
+  const newestMessageRef = createRef<HTMLDivElement>();
 
   useEffect(() => {
     if (wsClient === null) {
@@ -65,7 +66,7 @@ export function Chat() {
         wsClient.subscribe(chatroom, (message: IMessage) => {
           console.log(`Received message ${message.body}`, message);
           const msg: ServerMessage = JSON.parse(message.body) as ServerMessage;
-          setMessages(
+          setMessages((messages) =>
             messages.concat([
               {
                 id: msg.id,
@@ -82,11 +83,11 @@ export function Chat() {
     return () => {
       wsSubscription?.unsubscribe();
     };
-  }, [messages, username, wsClient, wsClient?.connected, wsSubscription]);
+  }, [username, wsClient, wsClient?.connected, wsSubscription]);
 
   useEffect(() => {
     void getMessages().then((messages) => {
-      setMessages(messages);
+      setMessages(messages.reverse());
     });
   }, [getMessages]);
 
@@ -95,6 +96,10 @@ export function Chat() {
       setUsername(profile?.name ?? '');
     });
   }, [getUserProfile]);
+
+  useEffect(() => {
+    newestMessageRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   const sendMessage = useCallback(
     (message: string) => {
@@ -121,7 +126,16 @@ export function Chat() {
           alignContent={'center'}
           sx={{ width: '100%', height: '100%' }}
         >
-          <Grid item sx={{ width: '100%', flexGrow: 1, mt: 1 }}>
+          <Grid
+            item
+            sx={{
+              width: '100%',
+              height: '80%',
+              flexGrow: 1,
+              mt: 1,
+              overflow: 'auto',
+            }}
+          >
             {messages.map((message) => (
               <Message
                 key={message.id}
@@ -131,6 +145,7 @@ export function Chat() {
                 text={message.message}
               />
             ))}
+            <Box ref={newestMessageRef} />
           </Grid>
           <Grid
             item

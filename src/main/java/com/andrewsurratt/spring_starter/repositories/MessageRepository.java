@@ -9,5 +9,5 @@ import java.util.UUID;
 
 @Repository
 public interface MessageRepository extends CrudRepository<Message, UUID> {
-    List<Message> findFirst10ByOrderByIdDesc();
+    List<Message> findFirst10ByOrderByCreatedDateDesc();
 }

@@ -1,5 +1,5 @@
 import { useTheme } from '@mui/material/styles';
-import { Container, Grid, IconButton, TextField } from '@mui/material';
+import { Grid, IconButton, Input } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import { useState } from 'react';
 
@@ -12,38 +12,27 @@ export function MessageInput({ sendMessage }: MessageInputParams) {
   const [message, setMessage] = useState<string>('');
 
   return (
-    <Container>
-      <Grid
-        container
-        direction="row"
-        spacing={1}
-        alignContent={'space-between'}
-        alignItems={'center'}
-      >
-        <Grid item sx={{ flexGrow: 1 }}>
-          <TextField
-            id="message-input"
-            label="Type your message here..."
-            variant="filled"
-            sx={{ width: '100%' }}
-            value={message}
-            onChange={(e) => {
-              setMessage(e.target.value);
-            }}
-          />
-        </Grid>
-        <Grid item>
-          <IconButton
-            onClick={(e) => {
-              e.preventDefault();
-              sendMessage(message);
-            }}
-            sx={{ color: theme.palette.primary.main }}
-          >
-            <SendIcon />
-          </IconButton>
-        </Grid>
-      </Grid>
-    </Container>
+    <Grid
+      component={'form'}
+      defaultValue=""
+      onSubmit={(e) => {
+        e.preventDefault();
+        sendMessage(message);
+        setMessage('');
+      }}
+      sx={{ width: '100%', display: 'flex', justifyContent: 'space-between' }}
+    >
+      <Input
+        placeholder="Type your message here..."
+        value={message}
+        onChange={(e) => {
+          setMessage(e.target.value);
+        }}
+        sx={{ flexGrow: 1, marginRight: 2 }}
+      />
+      <IconButton type="submit" sx={{ color: theme.palette.primary.main }}>
+        <SendIcon />
+      </IconButton>
+    </Grid>
   );
 }

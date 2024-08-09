@@ -11,8 +11,10 @@ import {
 import { Documents } from '../components/Documents.tsx';
 import { ServerDocument, useServer } from '../hooks/useServer.ts';
 import { FormEvent, useEffect, useState } from 'react';
+import { useAuth } from '../hooks/useAuth.ts';
 
 export const Home = () => {
+  const { isAuthenticated } = useAuth();
   const { createDocument, getDocuments } = useServer();
   const [open, setOpen] = useState(false);
   const [documents, setDocuments] = useState<ServerDocument[] | undefined>([]);
@@ -42,9 +44,11 @@ export const Home = () => {
   return (
     <Box>
       <Box sx={{ paddingLeft: 5 }}>
-        <Button variant="contained" onClick={handleClickOpen}>
-          Create Document
-        </Button>
+        {isAuthenticated && (
+          <Button variant="contained" onClick={handleClickOpen}>
+            Create Document
+          </Button>
+        )}
       </Box>
       <Dialog
         open={open}

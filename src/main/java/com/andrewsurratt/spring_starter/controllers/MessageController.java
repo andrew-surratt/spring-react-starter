@@ -19,6 +19,6 @@ public class MessageController {
             produces = MediaType.APPLICATION_JSON_VALUE)
     public List<Message> getMessages(
     ) {
-        return messageRepository.findFirst10ByOrderByIdDesc();
+        return messageRepository.findFirst10ByOrderByCreatedDateDesc();
     }
 }
