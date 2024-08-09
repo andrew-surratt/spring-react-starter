@@ -35,7 +35,7 @@ const router = createBrowserRouter([
     children: [
       {
         path: '/',
-        element: <Home />,
+        element: <AuthenticationGuard component={Home} />,
       },
       {
         path: '/chat',

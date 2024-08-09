@@ -1,155 +1,120 @@
-import {
-  Container,
-  Grid,
-  IconButton,
-  Paper,
-  TextField,
-  Typography,
-} from '@mui/material';
-import { useTheme } from '@mui/material/styles';
-import SendIcon from '@mui/icons-material/Send';
-import { useEffect, useState } from 'react';
-import { useAuth } from '../hooks/useAuth.ts';
-
-type MessageParams = {
-  direction: 'in' | 'out';
-  text: string;
-};
-
-function Message({ direction, text }: MessageParams) {
-  const theme = useTheme();
-
-  return (
-    <Container>
-      <Grid
-        container
-        direction={direction === 'in' ? 'row' : 'row-reverse'}
-        spacing={2}
-      >
-        <Grid item xs={6}>
-          <Paper
-            sx={{
-              borderRadius: '15px',
-              margin: '5px',
-              backgroundColor:
-                direction === 'in'
-                  ? theme.palette.primary.light
-                  : theme.palette.primary.main,
-              ...(direction === 'in'
-                ? {
-                    borderBottomLeftRadius: '0',
-                  }
-                : {
-                    borderBottomRightRadius: '0',
-                  }),
-            }}
-          >
-            <Typography
-              variant={'body1'}
-              sx={{
-                padding: '10px',
-                paddingLeft: '20px',
-                color: theme.palette.primary.contrastText,
-              }}
-            >
-              {text}
-            </Typography>
-          </Paper>
-        </Grid>
-      </Grid>
-    </Container>
-  );
-}
-
-function MessageInput() {
-  const theme = useTheme();
-
-  return (
-    <Container>
-      <Grid
-        container
-        direction="row"
-        spacing={1}
-        alignContent={'space-between'}
-        alignItems={'center'}
-      >
-        <Grid item sx={{ flexGrow: 1 }}>
-          <TextField
-            id="message-input"
-            label="Type your message here..."
-            variant="filled"
-            sx={{ width: '100%' }}
-          />
-        </Grid>
-        <Grid item>
-          <IconButton sx={{ color: theme.palette.primary.main }}>
-            <SendIcon />
-          </IconButton>
-        </Grid>
-      </Grid>
-    </Container>
-  );
-}
-
-type Message = {
-  user: string;
-  message: string;
-};
+import { Box, Container, Grid } from '@mui/material';
+import { createRef, useCallback, useEffect, useState } from 'react';
+import { Client, IMessage, StompSubscription } from '@stomp/stompjs';
+import { MessageInput } from '../components/chats/MessageInput.tsx';
+import { Message } from '../components/chats/Message.tsx';
+import { ServerMessage, useServer } from '../hooks/useServer.ts';
 
 export function Chat() {
-  const serverWebSocketUrl = import.meta.env
-    .VITE_SERVER_WEBSOCKET_URL as string;
-  const { getAccessTokenSilently } = useAuth();
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [ws, setWs] = useState<WebSocket | null>(null);
-  const [message, setMessage] = useState<Message | null>(null);
-  const [clientId, setClientId] = useState('');
+  const chatroom = '/topic/room';
+
+  const { getMessages, getUserProfile } = useServer();
+
+  const [wsClient, setWsClient] = useState<Client | null>(null);
+  const [wsSubscription, setWsSubscription] =
+    useState<StompSubscription | null>(null);
+  const [messages, setMessages] = useState<ServerMessage[]>([]);
+  const [username, setUsername] = useState('');
+  const newestMessageRef = createRef<HTMLDivElement>();
 
   useEffect(() => {
-    const effect = async () => {
-      const token = await getAccessTokenSilently();
+    if (wsClient === null) {
+      const serverWebSocketUrl = import.meta.env
+        .VITE_SERVER_WEBSOCKET_URL as string;
+      const client = new Client({
+        brokerURL: `${serverWebSocketUrl}/chat`,
+        debug: function (str) {
+          console.log(str);
+        },
+        reconnectDelay: 50000,
+        heartbeatIncoming: 4000,
+        heartbeatOutgoing: 4000,
+      });
 
-      const websocket: WebSocket = new WebSocket(`ws://localhost:3000/chat`);
-
-      websocket.onopen = () => {
-        console.log('WebSocket is connected');
-        // Generate a unique client ID
-        const id = Math.floor(Math.random() * 1000);
-        setClientId(String(id));
+      client.onConnect = function (frame) {
+        console.log('WebSocket is connected ' + frame.body);
       };
 
-      websocket.onmessage = (evt) => {
-        const message = evt as Message;
-        setMessages((prevMessages: Message[]) => [...prevMessages, message]);
+      client.onWebSocketError = (e) => {
+        console.error(e);
       };
 
-      websocket.onclose = (event) => {
-        console.log('WebSocket is closed', event);
+      client.onStompError = function (frame) {
+        // Will be invoked in case of error encountered at Broker
+        // Bad login/passcode typically will cause an error
+        console.log('Broker reported error: ' + frame.headers['message']);
+        console.log('Additional details: ' + frame.body);
       };
 
-      setWs(websocket);
-    };
-    effect().catch((e: unknown) => {
-      console.error(e);
-    });
+      client.activate();
+      setWsClient(client);
+    }
 
     return () => {
-      ws?.close();
+      void wsClient?.deactivate();
     };
-  }, [serverWebSocketUrl]);
+  }, [wsClient]);
 
-  const sendMessage = () => {
-    if (ws) {
-      ws.send(
-        JSON.stringify({
-          type: 'message',
-          payload: message,
-          clientId: clientId,
+  useEffect(() => {
+    if (
+      wsClient !== null &&
+      wsClient.connected &&
+      wsSubscription === null &&
+      username
+    ) {
+      setWsSubscription(
+        wsClient.subscribe(chatroom, (message: IMessage) => {
+          console.log(`Received message ${message.body}`, message);
+          const msg: ServerMessage = JSON.parse(message.body) as ServerMessage;
+          setMessages((messages) =>
+            messages.concat([
+              {
+                id: msg.id,
+                username,
+                message: msg.message,
+                createdDate: msg.createdDate,
+              },
+            ]),
+          );
         }),
       );
-      setMessage('');
     }
-  };
+
+    return () => {
+      wsSubscription?.unsubscribe();
+    };
+  }, [username, wsClient, wsClient?.connected, wsSubscription]);
+
+  useEffect(() => {
+    void getMessages().then((messages) => {
+      setMessages(messages.reverse());
+    });
+  }, [getMessages]);
+
+  useEffect(() => {
+    void getUserProfile().then((profile) => {
+      setUsername(profile?.name ?? '');
+    });
+  }, [getUserProfile]);
+
+  useEffect(() => {
+    newestMessageRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const sendMessage = useCallback(
+    (message: string) => {
+      if (wsClient) {
+        wsClient.publish({
+          destination: '/app/message',
+          body: JSON.stringify({
+            username: username,
+            message: message,
+          }),
+        });
+      }
+    },
+    [username, wsClient],
+  );
 
   return (
     <>
@@ -161,15 +126,32 @@ export function Chat() {
           alignContent={'center'}
           sx={{ width: '100%', height: '100%' }}
         >
-          <Grid item sx={{ width: '100%', flexGrow: 1, mt: 1 }}>
-            <Message direction={'in'} text={'Hello'} />
-            <Message direction={'out'} text={'Hi there'} />
+          <Grid
+            item
+            sx={{
+              width: '100%',
+              height: '80%',
+              flexGrow: 1,
+              mt: 1,
+              overflow: 'auto',
+            }}
+          >
+            {messages.map((message) => (
+              <Message
+                key={message.id}
+                direction={message.username === username ? 'out' : 'in'}
+                createdDate={message.createdDate}
+                username={message.username}
+                text={message.message}
+              />
+            ))}
+            <Box ref={newestMessageRef} />
           </Grid>
           <Grid
             item
             sx={{ width: '100%', alignSelf: 'flex-end', margin: 'auto' }}
           >
-            <MessageInput />
+            <MessageInput sendMessage={sendMessage} />
           </Grid>
         </Grid>
       </Container>
