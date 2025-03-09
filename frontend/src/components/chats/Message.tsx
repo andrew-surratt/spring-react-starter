@@ -1,6 +1,6 @@
 import { useTheme } from '@mui/material/styles';
 import { Card, CardContent, Container, Grid, Typography } from '@mui/material';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 
 export type MessageParams = {
   direction: 'in' | 'out';

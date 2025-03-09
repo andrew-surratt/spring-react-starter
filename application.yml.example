@@ -6,7 +6,7 @@ spring:
       test: test
   data:
     redis:
-      host: localhost
+      host: redis
       port: 6379
 server:
   port: 3000
@@ -20,5 +20,7 @@ okta:
     audience: https://auth0.com/api/v2/
     client-id: id
 application:
-  client-origin-url: http://localhost:3002
+  client-origin-url: >
+    http://localhost:3002,
+    http://frontend-nginx:80
   cors-max-age: 86400

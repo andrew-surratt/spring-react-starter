@@ -5,16 +5,18 @@ import org.springframework.boot.context.properties.bind.ConstructorBinding;
 
 import lombok.Value;
 
+import java.util.List;
+
 @Value
 @ConfigurationProperties(prefix = "application")
 public class ApplicationProperties {
 
-    String clientOriginUrl;
+    List<String> clientOriginUrl;
     Integer corsMaxAge;
 
     @ConstructorBinding
     public ApplicationProperties(
-            final String clientOriginUrl,
+            final List<String> clientOriginUrl,
             final Integer corsMaxAge
     ) {
         this.clientOriginUrl = clientOriginUrl;
