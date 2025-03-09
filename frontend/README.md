@@ -12,22 +12,33 @@ This template provides a starter for React projects.
 - ESLint
 - Automated formatting using Husky hooks
 
-## Install
+## Config
+
+Make a copy of `.env.example` to configure each environment:
+
+- Configure the production properties with `.env.production`
+- Configure the development properties with `.env.development`
+
+## Run with NPM
+
+This will run the frontend only, see the top-level README for how to run with docker.
+
+### Install
 
 `npm install`
 
-## Start
+### Start
 
 `npm run dev`
 
-## Build
+### Build
 
 `npm run build`
 
-## Lint
+### Lint
 
 `npm run lint`
 
-## Prettier
+### Prettier
 
 `npm run prettier`
