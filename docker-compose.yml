@@ -1,0 +1,20 @@
+services:
+  redis:
+    image: 'redis:latest'
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - redis
+    environment:
+      - SPRING_DATA_REDIS_HOST=redis
+  web:
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+      target: prod
+    ports:
+      - '3002:80'
+    depends_on:
+      - api

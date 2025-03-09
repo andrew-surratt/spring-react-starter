@@ -1,0 +1,31 @@
+services:
+  redis:
+    image: 'redis:latest'
+    ports:
+      - '6379:6379'
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - '3000:3000'
+    volumes:
+      - type: 'bind'
+        source: './src'
+        target: '/app/src'
+    depends_on:
+      - redis
+    environment:
+      - SPRING_DATA_REDIS_HOST=redis
+  web:
+    build:
+      context: frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - '3002:3002'
+    volumes:
+      - type: 'bind'
+        source: './frontend/src'
+        target: '/usr/src/frontend/src'
+    depends_on:
+      - api

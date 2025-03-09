@@ -1,0 +1,7 @@
+ARG NODE_VERSION=20
+
+FROM node:${NODE_VERSION}-alpine AS base
+WORKDIR /usr/src/frontend
+COPY . .
+RUN ["npm", "ci", "--include=dev"]
+CMD ["npm", "run", "dev"]
